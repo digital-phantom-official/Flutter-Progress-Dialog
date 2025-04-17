@@ -31,13 +31,90 @@ class ProgressDialog {
   /// If true, the dialog will be displayed above all other routes.
   late bool _useRootNavigator;
 
+  // Newly added instance members
+  late final int max;
+  Cancel? cancel;
+  late final ProgressType progressType;
+  late final ValuePosition valuePosition;
+  late final Color backgroundColor;
+  Color? surfaceTintColor;
+  late final Color barrierColor;
+  late final Color progressValueColor;
+  late final Color progressBgColor;
+  late final Color valueColor;
+  late final Color msgColor;
+  late final TextAlign msgTextAlign;
+  late final FontWeight msgFontWeight;
+  late final FontWeight valueFontWeight;
+  late final double valueFontSize;
+  late final double msgFontSize;
+  late final int msgMaxLines;
+  late final double elevation;
+  late final double borderRadius;
+  late final bool barrierDismissible;
+  late final bool hideValue;
+  late final int closeWithDelay;
+
   /// Creates a progress dialog with the given build context.
   ///
   /// [context] - Required build context for showing the dialog
   /// [useRootNavigator] - Whether to show in root navigator. Defaults to true
-  ProgressDialog({required context, bool? useRootNavigator}) {
-    this._context = context;
-    this._useRootNavigator = useRootNavigator ?? true;
+  ProgressDialog({
+    required context,
+    bool? useRootNavigator,
+    int max = 100,
+    String msg = "Please wait...",
+    Cancel? cancel,
+    ProgressType progressType = ProgressType.indeterminate,
+    ValuePosition valuePosition = ValuePosition.right,
+    Color backgroundColor = Colors.white,
+    Color? surfaceTintColor,
+    Color barrierColor = Colors.transparent,
+    Color progressValueColor = Colors.blueAccent,
+    Color progressBgColor = Colors.blueGrey,
+    Color valueColor = Colors.black87,
+    Color msgColor = Colors.black87,
+    TextAlign msgTextAlign = TextAlign.center,
+    FontWeight msgFontWeight = FontWeight.bold,
+    FontWeight valueFontWeight = FontWeight.normal,
+    double valueFontSize = 15.0,
+    double msgFontSize = 17.0,
+    int msgMaxLines = 1,
+    double elevation = 5.0,
+    double borderRadius = 15.0,
+    bool barrierDismissible = false,
+    bool hideValue = false,
+    int closeWithDelay = 100,
+    ValueChanged<DialogStatus>? onStatusChanged,
+  }) {
+    _context = context;
+    _useRootNavigator = useRootNavigator ?? true;
+    _msg.value = msg;
+    _onStatusChanged = onStatusChanged;
+
+    // Assigning constructor parameters to instance variables
+    this.max = max;
+    this.cancel = cancel;
+    this.progressType = progressType;
+    this.valuePosition = valuePosition;
+    this.backgroundColor = backgroundColor;
+    this.surfaceTintColor = surfaceTintColor;
+    this.barrierColor = barrierColor;
+    this.progressValueColor = progressValueColor;
+    this.progressBgColor = progressBgColor;
+    this.valueColor = valueColor;
+    this.msgColor = msgColor;
+    this.msgTextAlign = msgTextAlign;
+    this.msgFontWeight = msgFontWeight;
+    this.valueFontWeight = valueFontWeight;
+    this.valueFontSize = valueFontSize;
+    this.msgFontSize = msgFontSize;
+    this.msgMaxLines = msgMaxLines;
+    this.elevation = elevation;
+    this.borderRadius = borderRadius;
+    this.barrierDismissible = barrierDismissible;
+    this.hideValue = hideValue;
+    this.closeWithDelay = closeWithDelay;
   }
 
   /// Updates the dialog's progress value and message.
@@ -142,35 +219,35 @@ class ProgressDialog {
   /// The dialog can be updated using the [update] method and closed manually using [close].
   /// Status changes can be monitored through the [onStatusChanged] callback.
   Future<void> show({
-    int max = 100,
-    String msg = "Default Message",
+    int? max,
+    String? msg,
     Completed? completed,
     Cancel? cancel,
-    ProgressType progressType = ProgressType.indeterminate,
-    ValuePosition valuePosition = ValuePosition.right,
-    Color backgroundColor = Colors.white,
+    ProgressType? progressType,
+    ValuePosition? valuePosition,
+    Color? backgroundColor,
     Color? surfaceTintColor,
-    Color barrierColor = Colors.transparent,
-    Color progressValueColor = Colors.blueAccent,
-    Color progressBgColor = Colors.blueGrey,
-    Color valueColor = Colors.black87,
-    Color msgColor = Colors.black87,
-    TextAlign msgTextAlign = TextAlign.center,
-    FontWeight msgFontWeight = FontWeight.bold,
-    FontWeight valueFontWeight = FontWeight.normal,
-    double valueFontSize = 15.0,
-    double msgFontSize = 17.0,
-    int msgMaxLines = 1,
-    double elevation = 5.0,
-    double borderRadius = 15.0,
-    bool barrierDismissible = false,
-    bool hideValue = false,
-    int closeWithDelay = 100,
+    Color? barrierColor,
+    Color? progressValueColor,
+    Color? progressBgColor,
+    Color? valueColor,
+    Color? msgColor,
+    TextAlign? msgTextAlign,
+    FontWeight? msgFontWeight,
+    FontWeight? valueFontWeight,
+    double? valueFontSize,
+    double? msgFontSize,
+    int? msgMaxLines,
+    double? elevation,
+    double? borderRadius,
+    bool? barrierDismissible,
+    bool? hideValue,
+    int? closeWithDelay,
     ValueChanged<DialogStatus>? onStatusChanged,
   }) {
     _dialogIsOpen = true;
-    _msg.value = msg;
-    _onStatusChanged = onStatusChanged;
+    _msg.value = msg ?? _msg.value;
+    _onStatusChanged = onStatusChanged ?? _onStatusChanged;
     _setDialogStatus(DialogStatus.opened);
 
     if (completed?.completedMsgFuture != null) {
@@ -182,35 +259,36 @@ class ProgressDialog {
     }
 
     return showDialog(
-      barrierDismissible: barrierDismissible,
-      barrierColor: barrierColor,
+      barrierDismissible: barrierDismissible ?? this.barrierDismissible,
+      barrierColor: barrierColor ?? this.barrierColor,
       context: _context,
       useRootNavigator: _useRootNavigator,
       builder: (context) => PopScope(
-        canPop: barrierDismissible,
+        canPop: barrierDismissible ?? this.barrierDismissible,
         child: AlertDialog(
-          surfaceTintColor: surfaceTintColor,
-          backgroundColor: backgroundColor,
-          elevation: elevation,
+          surfaceTintColor: surfaceTintColor ?? this.surfaceTintColor,
+          backgroundColor: backgroundColor ?? this.backgroundColor,
+          elevation: elevation ?? this.elevation,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.all(
-              Radius.circular(borderRadius),
+              Radius.circular(borderRadius ?? this.borderRadius),
             ),
           ),
           content: ValueListenableBuilder(
             valueListenable: _progress,
             builder: (BuildContext context, dynamic value, Widget? child) {
-              if (value == max) {
+              final int _max = max ?? this.max;
+              if (value == _max) {
                 _setDialogStatus(DialogStatus.completed);
                 completed == null
-                    ? close(delay: closeWithDelay)
+                    ? close(delay: closeWithDelay ?? this.closeWithDelay)
                     : close(delay: completed.completionDelay);
               }
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (cancel != null) ...[
-                    cancel.autoHidden && value == max
+                    cancel.autoHidden && value == _max
                         ? SizedBox.shrink()
                         : Align(
                             alignment: Alignment.topRight,
@@ -219,9 +297,7 @@ class ProgressDialog {
                               splashColor: Colors.transparent,
                               onTap: () {
                                 close();
-                                if (cancel.cancelClicked != null) {
-                                  cancel.cancelClicked!();
-                                }
+                                cancel.cancelClicked?.call();
                               },
                               child: Image(
                                 width: cancel.cancelImageSize,
@@ -238,7 +314,7 @@ class ProgressDialog {
                   ],
                   Row(
                     children: [
-                      value == max && completed != null
+                      value == _max && completed != null
                           ? Image(
                               width: 40,
                               height: 40,
@@ -251,21 +327,22 @@ class ProgressDialog {
                           : Container(
                               width: 35.0,
                               height: 35.0,
-                              child: progressType.isIndeterminate
+                              child: (progressType ?? this.progressType)
+                                          .isIndeterminate ||
+                                      value == 0
                                   ? _normalProgress(
-                                      bgColor: progressBgColor,
-                                      valueColor: progressValueColor,
+                                      bgColor: progressBgColor ??
+                                          this.progressBgColor,
+                                      valueColor: progressValueColor ??
+                                          this.progressValueColor,
                                     )
-                                  : value == 0
-                                      ? _normalProgress(
-                                          bgColor: progressBgColor,
-                                          valueColor: progressValueColor,
-                                        )
-                                      : _valueProgress(
-                                          valueColor: progressValueColor,
-                                          bgColor: progressBgColor,
-                                          value: (value / max) * 100,
-                                        ),
+                                  : _valueProgress(
+                                      valueColor: progressValueColor ??
+                                          this.progressValueColor,
+                                      bgColor: progressBgColor ??
+                                          this.progressBgColor,
+                                      value: (value / _max) * 100,
+                                    ),
                             ),
                       Expanded(
                         child: Padding(
@@ -282,16 +359,18 @@ class ProgressDialog {
                                 valueListenable: _completedMsg,
                                 builder: (context, completedMsgValue, child) {
                                   return Text(
-                                    value == max && completed != null
+                                    value == _max && completed != null
                                         ? completedMsgValue
                                         : msgValue,
-                                    textAlign: msgTextAlign,
-                                    maxLines: msgMaxLines,
+                                    textAlign:
+                                        msgTextAlign ?? this.msgTextAlign,
+                                    maxLines: msgMaxLines ?? this.msgMaxLines,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
-                                      fontSize: msgFontSize,
-                                      color: msgColor,
-                                      fontWeight: msgFontWeight,
+                                      fontSize: msgFontSize ?? this.msgFontSize,
+                                      color: msgColor ?? this.msgColor,
+                                      fontWeight:
+                                          msgFontWeight ?? this.msgFontWeight,
                                     ),
                                   );
                                 },
@@ -302,20 +381,22 @@ class ProgressDialog {
                       ),
                     ],
                   ),
-                  hideValue == false
+                  !(hideValue ?? this.hideValue)
                       ? Align(
                           child: Text(
-                            value <= 0 ? '' : '${_progress.value}/$max',
+                            value <= 0 ? '' : '${_progress.value}/$_max',
                             style: TextStyle(
-                              fontSize: valueFontSize,
-                              color: valueColor,
-                              fontWeight: valueFontWeight,
-                              decoration: value == max
+                              fontSize: valueFontSize ?? this.valueFontSize,
+                              color: valueColor ?? this.valueColor,
+                              fontWeight:
+                                  valueFontWeight ?? this.valueFontWeight,
+                              decoration: value == _max
                                   ? TextDecoration.lineThrough
                                   : TextDecoration.none,
                             ),
                           ),
-                          alignment: valuePosition == ValuePosition.right
+                          alignment: (valuePosition ?? this.valuePosition) ==
+                                  ValuePosition.right
                               ? Alignment.bottomRight
                               : Alignment.bottomCenter,
                         )
