@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:sn_progress_dialog/enums/dialog_status.dart';
@@ -54,6 +55,7 @@ class ProgressDialog {
   late final bool barrierDismissible;
   late final bool hideValue;
   late final int closeWithDelay;
+  late final bool _blurBackgroud;
 
   /// Creates a progress dialog with the given build context.
   ///
@@ -86,6 +88,7 @@ class ProgressDialog {
     bool hideValue = false,
     int closeWithDelay = 100,
     ValueChanged<DialogStatus>? onStatusChanged,
+    bool blurBackgroud = true,
   }) {
     _context = context;
     _useRootNavigator = useRootNavigator ?? true;
@@ -115,6 +118,7 @@ class ProgressDialog {
     this.barrierDismissible = barrierDismissible;
     this.hideValue = hideValue;
     this.closeWithDelay = closeWithDelay;
+    this._blurBackgroud = blurBackgroud;
   }
 
   /// Updates the dialog's progress value and message.
@@ -244,6 +248,7 @@ class ProgressDialog {
     bool? hideValue,
     int? closeWithDelay,
     ValueChanged<DialogStatus>? onStatusChanged,
+    bool? blurBackgroud,
   }) {
     _dialogIsOpen = true;
     _msg.value = msg ?? _msg.value;
@@ -257,7 +262,7 @@ class ProgressDialog {
     } else if (completed != null) {
       _completedMsg.value = completed.completedMsg;
     }
-
+    final blur = blurBackgroud ?? this._blurBackgroud;
     return showDialog(
       barrierDismissible: barrierDismissible ?? this.barrierDismissible,
       barrierColor: barrierColor ?? this.barrierColor,
@@ -265,145 +270,150 @@ class ProgressDialog {
       useRootNavigator: _useRootNavigator,
       builder: (context) => PopScope(
         canPop: barrierDismissible ?? this.barrierDismissible,
-        child: AlertDialog(
-          surfaceTintColor: surfaceTintColor ?? this.surfaceTintColor,
-          backgroundColor: backgroundColor ?? this.backgroundColor,
-          elevation: elevation ?? this.elevation,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(
-              Radius.circular(borderRadius ?? this.borderRadius),
+        child: BackdropFilter(
+          filter:
+              ImageFilter.blur(sigmaX: blur ? 10 : 0, sigmaY: blur ? 10 : 0),
+          child: AlertDialog(
+            surfaceTintColor: surfaceTintColor ?? this.surfaceTintColor,
+            backgroundColor: backgroundColor ?? this.backgroundColor,
+            elevation: elevation ?? this.elevation,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(
+                Radius.circular(borderRadius ?? this.borderRadius),
+              ),
             ),
-          ),
-          content: ValueListenableBuilder(
-            valueListenable: _progress,
-            builder: (BuildContext context, dynamic value, Widget? child) {
-              final int _max = max ?? this.max;
-              if (value == _max) {
-                _setDialogStatus(DialogStatus.completed);
-                completed == null
-                    ? close(delay: closeWithDelay ?? this.closeWithDelay)
-                    : close(delay: completed.completionDelay);
-              }
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (cancel != null) ...[
-                    cancel.autoHidden && value == _max
-                        ? SizedBox.shrink()
-                        : Align(
-                            alignment: Alignment.topRight,
-                            child: InkWell(
-                              highlightColor: Colors.transparent,
-                              splashColor: Colors.transparent,
-                              onTap: () {
-                                close();
-                                cancel.cancelClicked?.call();
-                              },
-                              child: Image(
-                                width: cancel.cancelImageSize,
-                                height: cancel.cancelImageSize,
-                                color: cancel.cancelImageColor,
-                                image: cancel.cancelImage ??
-                                    AssetImage(
-                                      "images/cancel.png",
-                                      package: "sn_progress_dialog",
-                                    ),
+            content: ValueListenableBuilder(
+              valueListenable: _progress,
+              builder: (BuildContext context, dynamic value, Widget? child) {
+                final int _max = max ?? this.max;
+                if (value == _max) {
+                  _setDialogStatus(DialogStatus.completed);
+                  completed == null
+                      ? close(delay: closeWithDelay ?? this.closeWithDelay)
+                      : close(delay: completed.completionDelay);
+                }
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (cancel != null) ...[
+                      cancel.autoHidden && value == _max
+                          ? SizedBox.shrink()
+                          : Align(
+                              alignment: Alignment.topRight,
+                              child: InkWell(
+                                highlightColor: Colors.transparent,
+                                splashColor: Colors.transparent,
+                                onTap: () {
+                                  close();
+                                  cancel.cancelClicked?.call();
+                                },
+                                child: Image(
+                                  width: cancel.cancelImageSize,
+                                  height: cancel.cancelImageSize,
+                                  color: cancel.cancelImageColor,
+                                  image: cancel.cancelImage ??
+                                      AssetImage(
+                                        "images/cancel.png",
+                                        package: "sn_progress_dialog",
+                                      ),
+                                ),
                               ),
                             ),
-                          ),
-                  ],
-                  Row(
-                    children: [
-                      value == _max && completed != null
-                          ? Image(
-                              width: 40,
-                              height: 40,
-                              image: completed.completedImage ??
-                                  AssetImage(
-                                    "images/completed.png",
-                                    package: "sn_progress_dialog",
-                                  ),
-                            )
-                          : Container(
-                              width: 35.0,
-                              height: 35.0,
-                              child: (progressType ?? this.progressType)
-                                          .isIndeterminate ||
-                                      value == 0
-                                  ? _normalProgress(
-                                      bgColor: progressBgColor ??
-                                          this.progressBgColor,
-                                      valueColor: progressValueColor ??
-                                          this.progressValueColor,
-                                    )
-                                  : _valueProgress(
-                                      valueColor: progressValueColor ??
-                                          this.progressValueColor,
-                                      bgColor: progressBgColor ??
-                                          this.progressBgColor,
-                                      value: (value / _max) * 100,
+                    ],
+                    Row(
+                      children: [
+                        value == _max && completed != null
+                            ? Image(
+                                width: 40,
+                                height: 40,
+                                image: completed.completedImage ??
+                                    AssetImage(
+                                      "images/completed.png",
+                                      package: "sn_progress_dialog",
                                     ),
+                              )
+                            : Container(
+                                width: 35.0,
+                                height: 35.0,
+                                child: (progressType ?? this.progressType)
+                                            .isIndeterminate ||
+                                        value == 0
+                                    ? _normalProgress(
+                                        bgColor: progressBgColor ??
+                                            this.progressBgColor,
+                                        valueColor: progressValueColor ??
+                                            this.progressValueColor,
+                                      )
+                                    : _valueProgress(
+                                        valueColor: progressValueColor ??
+                                            this.progressValueColor,
+                                        bgColor: progressBgColor ??
+                                            this.progressBgColor,
+                                        value: (value / _max) * 100,
+                                      ),
+                              ),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                              left: 15.0,
+                              top: 8.0,
+                              bottom: 8.0,
                             ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(
-                            left: 15.0,
-                            top: 8.0,
-                            bottom: 8.0,
-                          ),
-                          child: ValueListenableBuilder(
-                            valueListenable: _msg,
-                            builder: (BuildContext context, dynamic msgValue,
-                                Widget? child) {
-                              return ValueListenableBuilder(
-                                valueListenable: _completedMsg,
-                                builder: (context, completedMsgValue, child) {
-                                  return Text(
-                                    value == _max && completed != null
-                                        ? completedMsgValue
-                                        : msgValue,
-                                    textAlign:
-                                        msgTextAlign ?? this.msgTextAlign,
-                                    maxLines: msgMaxLines ?? this.msgMaxLines,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: msgFontSize ?? this.msgFontSize,
-                                      color: msgColor ?? this.msgColor,
-                                      fontWeight:
-                                          msgFontWeight ?? this.msgFontWeight,
-                                    ),
-                                  );
-                                },
-                              );
-                            },
+                            child: ValueListenableBuilder(
+                              valueListenable: _msg,
+                              builder: (BuildContext context, dynamic msgValue,
+                                  Widget? child) {
+                                return ValueListenableBuilder(
+                                  valueListenable: _completedMsg,
+                                  builder: (context, completedMsgValue, child) {
+                                    return Text(
+                                      value == _max && completed != null
+                                          ? completedMsgValue
+                                          : msgValue,
+                                      textAlign:
+                                          msgTextAlign ?? this.msgTextAlign,
+                                      maxLines: msgMaxLines ?? this.msgMaxLines,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize:
+                                            msgFontSize ?? this.msgFontSize,
+                                        color: msgColor ?? this.msgColor,
+                                        fontWeight:
+                                            msgFontWeight ?? this.msgFontWeight,
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  !(hideValue ?? this.hideValue)
-                      ? Align(
-                          child: Text(
-                            value <= 0 ? '' : '${_progress.value}/$_max',
-                            style: TextStyle(
-                              fontSize: valueFontSize ?? this.valueFontSize,
-                              color: valueColor ?? this.valueColor,
-                              fontWeight:
-                                  valueFontWeight ?? this.valueFontWeight,
-                              decoration: value == _max
-                                  ? TextDecoration.lineThrough
-                                  : TextDecoration.none,
+                      ],
+                    ),
+                    !(hideValue ?? this.hideValue)
+                        ? Align(
+                            child: Text(
+                              value <= 0 ? '' : '${_progress.value}/$_max',
+                              style: TextStyle(
+                                fontSize: valueFontSize ?? this.valueFontSize,
+                                color: valueColor ?? this.valueColor,
+                                fontWeight:
+                                    valueFontWeight ?? this.valueFontWeight,
+                                decoration: value == _max
+                                    ? TextDecoration.lineThrough
+                                    : TextDecoration.none,
+                              ),
                             ),
-                          ),
-                          alignment: (valuePosition ?? this.valuePosition) ==
-                                  ValuePosition.right
-                              ? Alignment.bottomRight
-                              : Alignment.bottomCenter,
-                        )
-                      : SizedBox.shrink()
-                ],
-              );
-            },
+                            alignment: (valuePosition ?? this.valuePosition) ==
+                                    ValuePosition.right
+                                ? Alignment.bottomRight
+                                : Alignment.bottomCenter,
+                          )
+                        : SizedBox.shrink()
+                  ],
+                );
+              },
+            ),
           ),
         ),
         onPopInvoked: (didPop) {
